@@ -93,7 +93,7 @@ Charon is standalone, but if it detects a [Phanes](https://github.com/Aloim/phan
 
 ## Version
 
-Current: **v2.0** (2026-07-10). See the version stamp at the top of `Charon.md`. Release history: [`Changelog.md`](Changelog.md).
+Current: **v1.1** (2026-07-10). See the version stamp at the top of `Charon.md`. Release history: [`Changelog.md`](Changelog.md).
 
 ---
 

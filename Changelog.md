@@ -4,9 +4,9 @@ All notable changes to **Charon**. The authoritative version marker is the stamp
 
 ---
 
-## v2.0 (2026-07-10)
+## v1.1 (2026-07-10)
 
-Full re-architecture in the Phanes v2.1 document style. **Deliberate contract change:**
+Reworked in the Phanes v2.1 document style, now with gated resolution. **Deliberate contract change:**
 the v1.0 advisory-only rule is replaced by mode-gated resolution. The non-goal
 "auto-fix will not be built" is now "no *ungated* fix will ever be built."
 

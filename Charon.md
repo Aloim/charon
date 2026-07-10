@@ -1,4 +1,4 @@
-<!-- Charon v2.0 (2026-07-10). Dead-code audit and gated-resolution prompt for Claude Code.
+<!-- Charon v1.1 (2026-07-10). Dead-code audit and gated-resolution prompt for Claude Code.
      Standalone: works in any repository. Phanes-aware: cooperates with a detected Phanes installation.
      TWO LOOPS: the Audit Loop never writes; the Resolution Loop writes only what the user's mode allows,
      only on a dedicated branch, only past an independent Critic gate.
@@ -245,7 +245,7 @@ Write the JSON companion next to the report, same basename with `.json` (schema 
 
 ```json
 {
-  "charon": "2.0",
+  "charon": "1.1",
   "date": "YYYY-MM-DD",
   "mode": "autoresolve | approve-first",
   "world": "phanes | standalone",
