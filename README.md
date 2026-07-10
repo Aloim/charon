@@ -43,7 +43,7 @@ This is deliberate: reachability analysis has well-known blind spots, and the co
 
 ```bash
 mkdir -p ~/.claude/commands
-curl -L https://raw.githubusercontent.com/Aloim/charon_phanes/main/Charon.md \
+curl -L https://raw.githubusercontent.com/Aloim/charon/main/Charon.md \
   -o ~/.claude/commands/charon.md
 ```
 
@@ -52,7 +52,7 @@ curl -L https://raw.githubusercontent.com/Aloim/charon_phanes/main/Charon.md \
 ```powershell
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\commands" | Out-Null
 Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/Aloim/charon_phanes/main/Charon.md `
+  -Uri https://raw.githubusercontent.com/Aloim/charon/main/Charon.md `
   -OutFile "$env:USERPROFILE\.claude\commands\charon.md"
 ```
 
