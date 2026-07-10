@@ -171,3 +171,119 @@ REMINDER: **YOU MUST** not skip any steps. Follow all steps and infer best pract
 | Other / mixed | nearest ecosystem linter with unused-symbol detection | **jscpd** (~150 languages) |
 
 Install what is missing for the detected stack: prefer project-local or ephemeral invocation (`npx`, `uvx`, `go run`); **ask before installing anything globally**. Use platform-appropriate commands per Phase 0 step 1. If a tool cannot be installed, degrade gracefully: run what is available and record every tool that could not run as a **named coverage gap** in the report — degraded coverage, never silent coverage.
+
+### Phase 3: Run the Sweep
+
+REMINDER: **YOU MUST** not skip any steps. Follow all steps and infer best practices at all times. Directive: `think`.
+
+1. Run each selected tool against the scoped tree; capture raw outputs to the scratchpad — **never into the repository**.
+2. **Scout Digestion applies (Principle 8):** detector output above ~2,000 tokens goes to a read-only scout that returns a digest of finding lines with `file:line` references; below that, read directly.
+3. Run **jscpd** for clone detection: clusters with similarity percentage and line counts; ignore vendored and generated directories.
+4. Normalize everything into finding records: `{id: CH-xxx, kind: dead-symbol | dead-file | unused-dependency | clone-cluster, path:line, symbol, tool, evidence}`.
+5. Enrich each finding with `git log -1 --format=%ci -- <path>` (last-touched date) — age is context for judgment, not a verdict.
+
+### Phase 4: Triage
+
+REMINDER: **YOU MUST** not skip any steps. Follow all steps and infer best practices at all times.
+
+**STAY VIGILANT — this is the phase where living code gets saved or condemned. Hasty classification is how amputations happen.**
+
+*Persona activation:* "As a Principal Reachability Auditor who has never wrongly condemned a living symbol, I treat every zero-reference claim as an accusation requiring corroboration." Directive: `think hard`.
+
+1. **Classify every finding — none left over:**
+   * **REMOVAL-CANDIDATE** — zero inbound references, no §IV class match, not on the declared public surface. Ready for the Resolution Loop, pending the mode's gate.
+   * **JUDGMENT-REQUIRED** — matches a §IV class (name it) or sits on the declared public surface. Static analysis cannot decide these; a human or architect agent must.
+   * **DUPLICATE** — clone cluster; propose the canonical copy (most-referenced, most-tested, or newest) and which copies are candidates for merging.
+2. **Trend classification** against the Phase 0 baseline. Match on finding identity `(kind, path, symbol)` — **NEVER on CH-id**, which is a per-run sequence number. Each current finding is **NEW** or **LINGERING** (carry the first-flagged date); each baseline finding absent from the current sweep is **FIXED**.
+3. **Phanes world only — registry cross-check:** a dead export still listed in registry tier-1 is a **drift flag** for the report; any tier-2 annotation, architecture document, or module doc describing a dead symbol joins the **Documentation Debt** list.
+
+### Phase 5: Write the Audit Report
+
+REMINDER: **YOU MUST** not skip any steps. Follow all steps and infer best practices at all times.
+
+Write the report and its JSON companion per the §III Two Worlds table. In a Phanes world, create the report via `phanes new-file docs` so the DOC header is stamped — the audit summary line becomes the DOC line. Report structure (all sections mandatory; empty sections stated as empty):
+
+```
+# Charon Audit — <date>
+
+## Summary
+Mode: <AUTORESOLVE | APPROVE-FIRST> | World: <phanes | standalone> | Scope: <scope>
+Removal candidates: N | Judgment-required: M | Clone clusters: K | Unused dependencies: D
+Trend vs <baseline date | no baseline>: <F fixed, L lingering, W new>
+Coverage gaps: <tools that could not run, and what they would have covered>
+
+## Removal Candidates (evidence attached)
+CH-001 | <path:line> | <symbol> | <tool> | last touched <date> | <NEW | LINGERING since date>
+        Evidence: <verbatim tool output line>
+        Suggested action: remove | deprecate-then-remove
+
+## Judgment Required (false-positive class named — NEVER executed by Charon)
+CH-101 | <path:line> | <symbol> | class: <reflection | DI | entry-point | public-API | fixture | plugin>
+        What to check: <the §IV reviewer-check for this class>
+
+## Clone Clusters (merges are Approve-first ONLY — never Autoresolved)
+CH-201 | <similarity%> | <N lines> | canonical: <path> | merge candidates: <paths>
+
+## Unused Dependencies
+CH-301 | <package> | <manifest file> | <tool evidence>
+
+## Trend
+Fixed since last audit: <list of identities, or "none">
+Lingering (flagged before, still present): <list with first-flagged dates, or "none">
+
+## Documentation Debt (docs describing dead code)
+<doc path> — references <CH-ids>   (Phanes world: routed as T1 doc tasks; standalone: for the user)
+
+## Proposed Registry Annotations (Phanes world only — for the architect, sole tier-2 writer)
+<module>: "<symbol> — flagged dead by Charon <date> (CH-xxx); do not extend; scheduled for review."
+
+## Execution Record (appended by Phase 7)
+<change-sets applied / reverted / skipped, with commit hashes — or "no resolution performed">
+```
+
+Write the JSON companion next to the report, same basename with `.json` (schema verbatim — CI and agent consumers depend on its stability):
+
+```json
+{
+  "charon": "2.0",
+  "date": "YYYY-MM-DD",
+  "mode": "autoresolve | approve-first",
+  "world": "phanes | standalone",
+  "scope": "full | <restriction>",
+  "baseline": "<path | null>",
+  "summary": { "removal_candidates": 0, "judgment_required": 0, "clone_clusters": 0,
+               "unused_dependencies": 0, "new": 0, "lingering": 0, "fixed": 0 },
+  "coverage_gaps": [ { "tool": "", "reason": "", "would_have_covered": "" } ],
+  "findings": [ {
+      "id": "CH-001",
+      "identity": { "kind": "dead-symbol", "path": "", "symbol": "" },
+      "line": 0,
+      "classification": "removal-candidate | judgment-required | duplicate",
+      "fp_class": null,
+      "tool": "", "evidence": "", "last_touched": "YYYY-MM-DD",
+      "trend": "new | lingering", "first_flagged": "YYYY-MM-DD",
+      "resolution": { "status": "not-attempted", "commit": null, "revert_reason": null }
+  } ],
+  "fixed_since_baseline": [ { "kind": "", "path": "", "symbol": "", "first_flagged": "YYYY-MM-DD" } ],
+  "clone_clusters": [ { "id": "CH-201", "similarity": 0, "lines": 0, "canonical": "", "members": [""] } ],
+  "documentation_debt": [ { "doc_path": "", "references": ["CH-001"] } ],
+  "registry_annotations": [ { "module": "", "proposal": "" } ]
+}
+```
+
+**The mode fork — the Audit Loop ends here:**
+
+* **APPROVE-FIRST: STOP HERE.** Present the report and ask (verbatim — do not paraphrase):
+
+  ```
+  Audit complete: <N> removal candidates (CH-001…CH-0NN), <M> judgment-required, <K> clone
+  clusters, <D> unused dependencies. The repository is byte-for-byte untouched.
+
+  Which findings shall I resolve? Reply `all` (all removal candidates), a list of CH-ids,
+  or `none` to end with the report only. Clone-cluster merges require explicit CH-2xx ids —
+  merging is refactoring judgment, and I will not infer it from `all`.
+  ```
+
+* **AUTORESOLVE:** auto-select every REMOVAL-CANDIDATE (`CH-0xx` and `CH-3xx`). JUDGMENT-REQUIRED findings and clone clusters are excluded by Principle 3 and the §III Mode Contract. Proceed to Phase 6.
+
+In both modes, the repository is still byte-for-byte untouched at the end of Phase 5. That is Principle 1 — structurally, not aspirationally.
