@@ -55,3 +55,59 @@ These principles are stated **once**, here. Every later phase references them by
 * **Freshness Mandate:** The tool table is dated. Re-verify each tool's release recency on every run; replace abandoned tools and record substitutions in the report. Dead-code tooling moves fast; a stale sweep is a false sweep.
 * **Respect the Host (Single-Writer Discipline):** In a Phanes-managed project, Charon writes only its own artifacts. Registry and documentation updates flow through their single writers — api-monitor for tier-1, the architect for tier-2 — via the project's chains. Charon proposes; it never writes another agent's artifacts.
 * **Scout Digestion:** Bulky detector output is digested by read-only scout subagents: ≥10:1 digest ratio, `file:line` references, no judgment delegated, no writes, no further spawning. Below ~2,000 tokens of raw output, always read directly — spawning a scout is never free.
+
+---
+
+## III. Constraints and Operational Policies
+
+### The Mode Contract
+
+**IMPERATIVE MANDATE:** Phase 0 asks the user **exactly once** which mode governs the run. `$ARGUMENTS` may preset the mode, in which case the question **MUST NOT** be asked.
+
+| Mode | Behavior |
+| --- | --- |
+| **AUTORESOLVE** | Audit → auto-select every clean REMOVAL-CANDIDATE → Resolution Loop (each change-set still passes the Critic Gate) → Execution Record. JUDGMENT-REQUIRED findings and clone-cluster merges are **NEVER** touched. |
+| **APPROVE-FIRST** | Audit → report → **STOP** → await the user's selection by CH-id (`all`, a list, or `none`) → Resolution Loop over the selection → Execution Record. |
+
+Both modes end with the Execution Record appended to the report and JSON. A run whose selection is `none` — or whose sweep finds nothing — ends as a pure audit, the repository byte-for-byte untouched. Mode selects the gatekeeper of the *set*; it never waives the per-change-set Critic Gate, and it never unlocks judgment territory.
+
+### The Two Worlds
+
+**The `.claude/.phanes` marker file is the SOLE authority on world detection.** The mere existence of `.claude/` proves **nothing** — nearly every repository touched by Claude Code has a `.claude/` directory (settings, permissions) without Phanes ever having run. **Never** infer a Phanes installation from `.claude/` alone.
+
+**Anomaly case:** a `documentation/` tree with registry/session-summary structure but no marker means a prior Phanes bootstrap was partial or manual. Treat the run as **standalone** and report the anomaly to the user — Charon does not adjudicate another system's install state.
+
+| Concern | Phanes world | Standalone |
+| --- | --- | --- |
+| Report location | `documentation/plans/fixes/charon-audit-<date>.md` via `phanes new-file docs` | `charon-audit-<date>.md` at repo root |
+| JSON companion | next to the report | next to the report |
+| Survey input | architecture snapshot + registries via `_index.md` navigation (index-first; snapshot-decay caveat) | source inspection only |
+| Critic gate | project's Critic agent via its workflows | ad-hoc adversarial reviewer subagent |
+| Application | project's Executor agent | Charon applies after Critic pass |
+| Registry updates | project's api-monitor invoked post-removal (tier-1 regen); tier-2 proposals to the architect | n/a |
+| Doc updates | Documentation Debt items flow as T1 doc tasks through the project chain; session-summary TODOs; `phanes doc-index` | Documentation Debt reported for the user |
+
+### Branch Policy
+
+All writes happen on `charon-cleanup-<YYYY-MM-DD>`. A clean working tree is **required** before Phase 6 — a dirty tree means **stop and tell the user**; never stash silently, never mingle Charon's removals with the user's uncommitted work. Charon **NEVER** merges the branch. Handing over an unmerged branch is not a limitation — it is the final review gate, and it belongs to the user.
+
+### Halt Policy
+
+Build or test failure after applying a change-set → **revert that change-set**, reclassify its finding as JUDGMENT-REQUIRED with the failure output attached as evidence, and continue with the next cluster. Every revert appears in the Execution Record. Two consecutive *unrelated* failures → **halt the Resolution Loop entirely** and report — the build was probably broken before Charon arrived; verify the baseline before blaming the removals.
+
+---
+
+## IV. False-Positive Classes (Judgment Territory)
+
+Reachability graphs are blind to edges that do not exist statically. A symbol with zero inbound *graph* edges can still be very alive — invoked by name, constructed by a container, or exported by contract. These classes are where static analysis systematically misjudges:
+
+| Class | Signature | What the reviewer must check |
+| --- | --- | --- |
+| Reflection / dynamic dispatch | invoked by name, not by reference | string-built symbol names; `getattr`/`Type.GetType`/`Class.forName`/`send` call sites |
+| Dependency-injection wiring | constructed by a container, not by callers | container registrations, annotation/attribute scans, module config |
+| Framework entry points | routes, handlers, serializers, CLI subcommands, lifecycle callbacks | framework registration conventions: decorators, config files, naming-pattern discovery |
+| Externally-consumed public API | exported for library users, internally unreferenced *by design* | package manifest exports, semver contract, known downstream consumers |
+| Test fixtures & harness helpers | invoked by the test runner, not by tests directly | runner conventions: `conftest.py`, fixture dirs, setup/teardown hooks |
+| Plugin registries & FFI surfaces | registry- or externally-invoked | plugin manifests, entry-point tables, FFI bindings, `dlopen`/ctypes call sites |
+
+Any finding matching one of these classes is marked **JUDGMENT-REQUIRED** with the class named. It is never marked as a confirmed removal candidate, and it is never executed — in any mode. This is Principle 3 made mechanical.
