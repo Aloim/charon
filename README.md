@@ -1,10 +1,10 @@
 # Charon
 
-**Charon** is a single-file audit-and-resolution prompt for [Claude Code](https://claude.com/claude-code) that finds dead code, unused files, unused dependencies, and duplicated code in your repository — then, in the mode you choose, removes the confirmed dead through independently reviewed, build-verified change-sets on a branch you merge yourself.
+**Charon** is a single-file audit-and-resolution prompt for [Claude Code](https://claude.com/claude-code) that finds dead code, unused files, unused dependencies, and duplicated code in your repository. Then, in the mode you choose, it removes the confirmed dead through independently reviewed, build-verified change-sets on a branch you merge yourself.
 
-The name is the job description: Charon identifies what has died in a codebase and ferries it out — but only what has been proven dead, only past an independent reviewer, and only across a branch boundary you control.
+The name is the job description: Charon identifies what has died in a codebase and ferries it out, but only what has been proven dead, only past an independent reviewer, and only across a branch boundary you control.
 
-Charon works entirely on its own in any repository — but it really shines in combination with [Phanes](https://github.com/Aloim/phanes): in a Phanes-managed project the audit reads the agent team's registries, removals flow through the project's own Critic → Executor review chain, and the report is filed straight into the Phanes documentation tree (see [Works with Phanes](#works-with-phanes)).
+Charon works entirely on its own in any repository, but it really shines in combination with [Phanes](https://github.com/Aloim/phanes): in a Phanes-managed project the audit reads the agent team's registries, removals flow through the project's own Critic → Executor review chain, and the report is filed straight into the Phanes documentation tree (see [Works with Phanes](#works-with-phanes)).
 
 **Why bother?** Dead and duplicated code is not just clutter; it actively degrades AI-assisted development. Agents read it, index it, imitate it, and route new work onto APIs that nothing uses anymore. A codebase that is honest about its dead is a codebase your tools can reason about.
 
@@ -24,16 +24,16 @@ Charon works entirely on its own in any repository — but it really shines in c
 
 Running `/charon` in a project drives Claude Code through two strictly separated loops:
 
-1. **Mode question.** At initialization Charon asks once (or reads it from your arguments): **AUTORESOLVE** — after the audit, execute every clean removal candidate automatically — or **APPROVE-FIRST** — stop at the report and execute only the findings you select.
+1. **Mode question.** At initialization Charon asks once (or reads it from your arguments): **AUTORESOLVE** executes every clean removal candidate automatically after the audit; **APPROVE-FIRST** stops at the report and executes only the findings you select.
 2. **Survey.** Detects your languages, build systems, entry points, and public API surface (a library's exports are alive by contract, even when internally unreferenced; Charon records this before sweeping, not after).
-3. **Sweep.** Selects maintained, ecosystem-native detectors from a dated tool table re-verified on every run — knip (TypeScript/JavaScript), vulture (Python), staticcheck and deadcode (Go), compiler lints plus cargo-machete (Rust), Roslyn analyzers (C#), and jscpd for clone detection across roughly 150 languages — runs them, and normalizes every finding with evidence and its last-touched date from git history.
-4. **Triage.** Classifies every finding: clean removal candidates, judgment-required findings (anything matching a known false-positive class — reflection, dependency injection, framework entry points, public APIs, test fixtures, plugin registries), and clone clusters. Compares against your previous audit to mark each finding NEW, LINGERING, or FIXED.
+3. **Sweep.** Selects maintained, ecosystem-native detectors from a dated tool table re-verified on every run (knip for TypeScript/JavaScript, vulture for Python, staticcheck and deadcode for Go, compiler lints plus cargo-machete for Rust, Roslyn analyzers for C#, and jscpd for clone detection across roughly 150 languages), runs them, and normalizes every finding with evidence and its last-touched date from git history.
+4. **Triage.** Classifies every finding: clean removal candidates, judgment-required findings (anything matching a known false-positive class: reflection, dependency injection, framework entry points, public APIs, test fixtures, plugin registries), and clone clusters. Compares against your previous audit to mark each finding NEW, LINGERING, or FIXED.
 5. **Report.** Writes the audit report plus a machine-readable JSON companion: summary counts, per-finding evidence with file and line, trend against the last run, clone clusters with a suggested canonical copy, unused dependencies, documentation debt, and coverage gaps.
 6. **Resolve.** For the approved set only: one change-set per finding cluster on a dedicated `charon-cleanup-<date>` branch, each change-set independently reviewed by a critic whose only goal is to prove the code is *alive*, each verified by your build and tests, each reverted and reclassified if verification fails. The branch is handed to you unmerged, with a full Execution Record.
 
 ## What it will never do without you
 
-Every removal is gated. Charon **never** executes judgment-required findings — in any mode; **never** auto-merges clone clusters (merging is refactoring judgment, reserved for explicit approval); **never** writes outside the cleanup branch; **never** merges that branch; and **never** skips the independent critic review, even in AUTORESOLVE mode. The audit itself is read-only in every mode — if you answer `none` at the report, your repository is byte-for-byte untouched.
+Every removal is gated. Charon **never** executes judgment-required findings in any mode; **never** auto-merges clone clusters (merging is refactoring judgment, reserved for explicit approval); **never** writes outside the cleanup branch; **never** merges that branch; and **never** skips the independent critic review, even in AUTORESOLVE mode. The audit itself is read-only in every mode; if you answer `none` at the report, your repository is byte-for-byte untouched.
 
 This is deliberate: reachability analysis has well-known blind spots, and the cost of deleting one reflection-invoked handler exceeds the benefit of auto-deleting a hundred true positives.
 
@@ -73,7 +73,7 @@ Charon asks for the mode once; arguments are forwarded, take priority over defau
 /charon approve-first
 ```
 
-Good moments to run it: before a large refactor (so you refactor the living code, not the dead), after landing a big feature or migration (when superseded code tends to linger), and periodically on long-lived projects — the JSON baseline turns repeat runs into trend reports, so you can watch the dead-code count grow or shrink run over run.
+Good moments to run it: before a large refactor (so you refactor the living code, not the dead), after landing a big feature or migration (when superseded code tends to linger), and periodically on long-lived projects, where the JSON baseline turns repeat runs into trend reports, so you can watch the dead-code count grow or shrink run over run.
 
 ## Reading the report
 
@@ -81,7 +81,7 @@ The report lands as `charon-audit-<date>.md` (repo root, or under `documentation
 
 - **Removal Candidates** carry full evidence and no false-positive flags. In AUTORESOLVE mode these are executed automatically (each still critic-reviewed); in APPROVE-FIRST they await your CH-id selection.
 - **Judgment Required** findings resemble dead code but match a class the tools systematically misjudge. The flagged class tells you exactly what to check; Charon will never execute these.
-- **Clone Clusters** show duplicated logic with a suggested canonical copy. Merging is refactoring work — approve it explicitly or it does not happen.
+- **Clone Clusters** show duplicated logic with a suggested canonical copy. Merging is refactoring work; approve it explicitly or it does not happen.
 - **Trend** shows what got fixed since the last audit and what lingers, matched by identity, not report ordering.
 - **Execution Record** lists every change-set applied, reverted, or skipped, with commit hashes, after a resolution run.
 

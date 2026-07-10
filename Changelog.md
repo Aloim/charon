@@ -4,10 +4,10 @@ All notable changes to **Charon**. The authoritative version marker is the stamp
 
 ---
 
-## v2.0 — 2026-07-10
+## v2.0 (2026-07-10)
 
 Full re-architecture in the Phanes v2.1 document style. **Deliberate contract change:**
-the v1.0 advisory-only rule is replaced by mode-gated resolution — the non-goal
+the v1.0 advisory-only rule is replaced by mode-gated resolution. The non-goal
 "auto-fix will not be built" is now "no *ungated* fix will ever be built."
 
 - Two-loop architecture: read-only Audit Loop (identical in every mode and world) and a
@@ -28,7 +28,7 @@ the v1.0 advisory-only rule is replaced by mode-gated resolution — the non-goa
 - Full Phanes v2.1 voice and structure: Ferryman persona, principles-stated-once,
   dated rubrics, verbatim blocks, per-phase personas and think-directives.
 
-## v1.0 — 2026-07-10
+## v1.0 (2026-07-10)
 
 Initial release.
 
