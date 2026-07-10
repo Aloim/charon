@@ -2,7 +2,7 @@
 
 **Charon** is a single-file audit prompt for [Claude Code](https://claude.com/claude-code) that finds dead code, unused files, unused dependencies, and duplicated code in your repository, then writes an evidence-backed report instead of touching anything.
 
-Named after the ferryman of the dead: every candidate must pay its toll of evidence before crossing, the possibly-living wait on the shore for your judgment, and Charon never kills anyone. He only ferries what has already died.
+The name is the job description: Charon identifies what has died in a codebase and prepares it for removal, but never does the removing itself.
 
 **Why bother?** Dead and duplicated code is not just clutter; it actively degrades AI-assisted development. Agents read it, index it, imitate it, and route new work onto APIs that nothing uses anymore. A codebase that is honest about its dead is a codebase your tools can reason about.
 
@@ -12,7 +12,7 @@ Named after the ferryman of the dead: every candidate must pay its toll of evide
 - [What it will never do](#what-it-will-never-do)
 - [How to install](#how-to-install)
 - [How to use](#how-to-use)
-- [Reading the Manifest](#reading-the-manifest)
+- [Reading the report](#reading-the-report)
 - [Works with Phanes](#works-with-phanes)
 - [Version](#version) · [License](#license)
 
@@ -26,11 +26,11 @@ Running `/charon` in a project drives Claude Code through a strict audit:
 2. **Tooling.** Selects maintained, ecosystem-native detectors from a dated tool table that the prompt re-verifies on every run: knip (TypeScript/JavaScript), vulture (Python), staticcheck and deadcode (Go), compiler lints plus cargo-machete (Rust), Roslyn analyzers (C#), and jscpd for clone detection across roughly 150 languages. Tools run project-local or ephemeral; nothing is installed globally without asking.
 3. **Sweep.** Runs the detectors, normalizes the findings, and enriches every candidate with its last-touched date from git history.
 4. **Triage.** Classifies every finding. Genuinely unreferenced symbols become candidates for removal. Anything matching a known false-positive class stays flagged for human judgment: code reached via reflection or dynamic dispatch, dependency-injection wiring, framework entry points (routes, handlers, serializers), externally-consumed public APIs, test fixtures, and plugin registries.
-5. **Report.** Writes the **Manifest of the Dead**: summary counts, per-candidate evidence with file and line, clone clusters with a suggested canonical copy, unused dependencies, and coverage gaps for anything the sweep could not check.
+5. **Report.** Writes the audit report: summary counts, per-finding evidence with file and line, clone clusters with a suggested canonical copy, unused dependencies, and coverage gaps for anything the sweep could not check.
 
 ## What it will never do
 
-Charon is advisory only. It does not delete code, does not edit source files, does not remove dependencies, and does not "clean up while it's at it." Removals belong in your normal review process, one change set at a time, using the Manifest as input. This is deliberate: reachability analysis has well-known blind spots, and the cost of deleting one reflection-invoked handler exceeds the benefit of auto-deleting a hundred true positives.
+Charon is advisory only. It does not delete code, does not edit source files, does not remove dependencies, and does not "clean up while it's at it." Removals belong in your normal review process, one change set at a time, using the report as input. This is deliberate: reachability analysis has well-known blind spots, and the cost of deleting one reflection-invoked handler exceeds the benefit of auto-deleting a hundred true positives.
 
 ## How to install
 
@@ -67,19 +67,19 @@ Arguments are forwarded and take priority over defaults, so you can scope the sw
 /charon only the src/api module; skip dependency checks
 ```
 
-Good moments to run it: before a large refactor (so you refactor the living, not the dead), after landing a big feature or migration (when superseded code tends to linger), and periodically on long-lived projects. On small codebases a run is cheap; let the size of the Manifest tell you your cadence.
+Good moments to run it: before a large refactor (so you refactor the living code, not the dead), after landing a big feature or migration (when superseded code tends to linger), and periodically on long-lived projects. On small codebases a run is cheap; let the size of the report tell you your cadence.
 
-## Reading the Manifest
+## Reading the report
 
 The report lands in your project as `charon-audit-<date>.md` (or under `documentation/plans/fixes/` in Phanes-managed projects). Three sections matter most:
 
-- **Candidates for Crossing** carry full evidence and no false-positive flags. Review them, then remove through your normal process.
-- **Awaiting Judgment** resemble dead code but match a class the tools systematically misjudge. The flagged class tells you exactly what to check before deciding.
+- **Removal Candidates** carry full evidence and no false-positive flags. Review them, then remove through your normal process.
+- **Judgment Required** findings resemble dead code but match a class the tools systematically misjudge. The flagged class tells you exactly what to check before deciding.
 - **Clone Clusters** show duplicated logic with a suggested canonical copy. Merging is refactoring work, not deletion work; treat it accordingly.
 
 ## Works with Phanes
 
-Charon is standalone, but if it detects a [Phanes](https://github.com/Aloim/phanes) installation it cooperates with it: the Manifest is filed into the Phanes documentation tree with a proper header, open items land in the session summary's TODO list, and dead exported APIs are drafted as registry annotation proposals for the architect agent, so the agent team stops routing new work onto them. Charon respects Phanes' single-writer rules throughout; it proposes, it never writes anyone else's artifacts.
+Charon is standalone, but if it detects a [Phanes](https://github.com/Aloim/phanes) installation it cooperates with it: the report is filed into the Phanes documentation tree with a proper header, open items land in the session summary's TODO list, and dead exported APIs are drafted as registry annotation proposals for the architect agent, so the agent team stops routing new work onto them. Charon respects Phanes' single-writer rules throughout; it proposes, it never writes anyone else's artifacts.
 
 ---
 
