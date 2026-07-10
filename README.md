@@ -4,6 +4,8 @@
 
 The name is the job description: Charon identifies what has died in a codebase and ferries it out — but only what has been proven dead, only past an independent reviewer, and only across a branch boundary you control.
 
+Charon works entirely on its own in any repository — but it really shines in combination with [Phanes](https://github.com/Aloim/phanes): in a Phanes-managed project the audit reads the agent team's registries, removals flow through the project's own Critic → Executor review chain, and the report is filed straight into the Phanes documentation tree (see [Works with Phanes](#works-with-phanes)).
+
 **Why bother?** Dead and duplicated code is not just clutter; it actively degrades AI-assisted development. Agents read it, index it, imitate it, and route new work onto APIs that nothing uses anymore. A codebase that is honest about its dead is a codebase your tools can reason about.
 
 **Contents**
@@ -41,7 +43,7 @@ This is deliberate: reachability analysis has well-known blind spots, and the co
 
 ```bash
 mkdir -p ~/.claude/commands
-curl -L https://raw.githubusercontent.com/Aloim/charon/main/Charon.md \
+curl -L https://raw.githubusercontent.com/Aloim/charon_phanes/main/Charon.md \
   -o ~/.claude/commands/charon.md
 ```
 
@@ -50,7 +52,7 @@ curl -L https://raw.githubusercontent.com/Aloim/charon/main/Charon.md \
 ```powershell
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\commands" | Out-Null
 Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/Aloim/charon/main/Charon.md `
+  -Uri https://raw.githubusercontent.com/Aloim/charon_phanes/main/Charon.md `
   -OutFile "$env:USERPROFILE\.claude\commands\charon.md"
 ```
 

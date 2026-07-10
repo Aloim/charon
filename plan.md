@@ -20,7 +20,7 @@ The name is the job description: identify what has died and prepare it for remov
 - `Charon.md` — the prompt (v2.0, done)
 - `README.md` — install, usage, report interpretation (done)
 - `Changelog.md`, `LICENSE` (CC BY-NC 4.0, matching Phanes) (done)
-- Public repository `github.com/Aloim/charon` with install via raw URL, mirroring the Phanes distribution model (pending)
+- Public repository `github.com/Aloim/charon_phanes` with install via raw URL, mirroring the Phanes distribution model (done)
 - Cross-reference from the Phanes README as an optional companion tool (pending)
 
 ## Roadmap
